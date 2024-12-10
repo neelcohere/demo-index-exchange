@@ -1,4 +1,37 @@
 /* static/css/styles.css */
+
+@font-face {
+    font-family: 'NeueMontreal';
+    src: url('../fonts/NeueMontreal-Regular.otf') format('opentype');
+    font-weight: 400; /* Normal weight */
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'NeueMontreal';
+    src: url('../fonts/NeueMontreal-Bold.otf') format('opentype');
+    font-weight: 700; /* Bold weight */
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'NeueMontreal';
+    src: url('../fonts/NeueMontreal-Medium.otf') format('opentype');
+    font-weight: 500; /* Medium weight */
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'NeueMontreal';
+    src: url('../fonts/NeueMontreal-Light.otf') format('opentype');
+    font-weight: 300; /* Light weight */
+    font-style: normal;
+    font-display: swap;
+}
+
 .fade-in {
     animation: fadeIn 0.3s ease-in;
 }
@@ -94,4 +127,38 @@
 
 .hover-scale:hover {
     transform: scale(1.02);
+}
+
+.btn {
+    background-color: #00291f;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.btn:hover {
+    transform: scale(1.05);
+    background-color: #4cd3cc
+}
+
+/* Highlighted row */
+.highlight-row {
+    background-color: #00291f;
+    color: white;
+}
+
+/* Ensure hover does not override the highlighted row */
+.highlight-row:hover {
+    background-color: #00291f; /* Retain highlighted background */
+}
+
+tr:hover:not(.highlight-row) {
+    background-color: #f9fafb; /* Example hover color */
+}
+
+.section-title {
+    color: 00291f;
 }

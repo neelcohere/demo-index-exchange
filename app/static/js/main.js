@@ -5,9 +5,9 @@ const summaryCache = {};
 // Function to highlight selected row
 function highlightSelectedRow(row) {
     document.querySelectorAll('tr').forEach(tr => {
-        tr.classList.remove('bg-blue-50');
+        tr.classList.remove('highlight-row');
     });
-    row.classList.add('bg-blue-50');
+    row.classList.add('highlight-row');
 }
 
 // Function to attach event listeners to log cards
@@ -55,6 +55,7 @@ async function showLogDetails(logId) {
         
         // Update initial fields
         document.getElementById('log-id').textContent = logId;
+        document.getElementById('log-title').textContent = logData.title;
         document.getElementById('log-data').textContent = JSON.stringify(logData, null, 2);
         document.getElementById('log-timestamp').textContent = 
             `Timestamp: ${new Date(timestamp).toLocaleString()}`;

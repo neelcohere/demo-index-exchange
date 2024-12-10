@@ -10,63 +10,73 @@
     <script src="{{ url_for('static', filename='js/main.js') }}" type="module" defer></script>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.6.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <style>
-        .fade-in {
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-    </style>
 </head>
 <body class="bg-gray-50">
+    <header class="flex items-center px-6 py-3 bg-white shadow">
+        <!-- Hamburger Menu Icon -->
+        <button class="mr-8 text-gray-800 hover:text-gray-600 focus:outline-none">
+            <i class="ri-menu-line text-2xl"></i>
+        </button>
+    
+        <!-- Logo -->
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="h-10 mr-1">
+    
+        <!-- Separator -->
+        <div class="w-[1px] h-8 bg-gray-300 mx-6"></div>
+    
+        <!-- Title -->
+        <h1 class="text-2xl neueMontreal nueuMontreal font-medium text-gray-800">
+            Ad Failure Chain Viewer
+        </h1>
+    </header>
     <div class="p-6 max-w-6xl mx-auto">
         <!-- Publisher Info -->
         <div class="mb-8">
-            <h1 class="text-3xl font-bold mb-2">{{ publisher_name }}</h1>
-            <div class="grid grid-cols-3 gap-4 text-sm">
-                <div>
-                    <span class="font-medium">Publisher ID:</span> {{ publisher_id }}
+            <h1 class="text-3xl nueuMontreal font-bold mb-6">{{ publisher_name }}</h1>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="flex flex-col items-start">
+                    <span class="text-2xl nueuMontreal font-medium text-gray-800">{{ publisher_id }}</span>
+                    <span class="text-gray-600 text-sm nueuMontreal font-regular mt-1">Publisher ID</span>
                 </div>
-                <div>
-                    <span class="font-medium">Integration Type:</span> Header Bidding
+                <div class="flex flex-col items-start">
+                    <span class="text-2xl nueuMontreal font-medium text-gray-800">Header Bidding</span>
+                    <span class="text-gray-600 text-sm nueuMontreal font-regular mt-1">Integration Type</span>
                 </div>
-                <div>
-                    <span class="font-medium">Account Manager:</span> Sarah Johnson
+                <div class="flex flex-col items-start">
+                    <span class="text-2xl nueuMontreal font-medium text-gray-800">Mayuran Yoganarajan</span>
+                    <span class="text-gray-600 text-sm nueuMontreal font-regular mt-1">Account Manager</span>
                 </div>
             </div>
         </div>
 
         <!-- Failure Chains Table -->
         <div class="bg-white rounded-lg shadow-sm border p-6 mb-8">
-            <h2 class="text-xl font-semibold mb-4">Recent Failure Events</h2>
+            <h2 class="text-xl nueuMontreal font-bold mb-4">Recent Failure Events</h2>
             
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
                         <tr class="border-b">
-                            <th class="text-left p-3">Chain ID</th>
-                            <th class="text-left p-3">Timestamp</th>
-                            <th class="text-left p-3">Failure Type</th>
-                            <th class="text-left p-3">Ad Unit</th>
-                            <th class="text-left p-3">Page URL</th>
-                            <th class="text-left p-3">Revenue Impact</th>
+                            <th class="neueMontreal font-bold text-left p-3">Chain ID</th>
+                            <th class="neueMontreal font-bold text-left p-3">Timestamp</th>
+                            <th class="neueMontreal font-bold text-left p-3">Failure Type</th>
+                            <th class="neueMontreal font-bold text-left p-3">Ad Unit</th>
+                            <th class="neueMontreal font-bold text-left p-3">Page URL</th>
+                            <th class="neueMontreal font-bold text-left p-3">Revenue Impact</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for chain in failure_chains %}
-                        <tr class="border-b hover:bg-gray-50 cursor-pointer"
+                        <tr class="border-b hover:bg-[#4cd3cc] cursor-pointer"
                             hx-get="/api/chain/{{ chain.id }}"
                             hx-target="#chain-details"
                             hx-swap="innerHTML transition:true">
-                            <td class="p-3">{{ chain.id }}</td>
-                            <td class="p-3">{{ chain.timestamp }}</td>
-                            <td class="p-3">{{ chain.failureType }}</td>
-                            <td class="p-3">{{ chain.adUnit }}</td>
-                            <td class="p-3">{{ chain.pageUrl }}</td>
-                            <td class="p-3">{{ chain.revenue_impact }}</td>
+                            <td class="neueMontreal font-regular p-3">{{ chain.id }}</td>
+                            <td class="neueMontreal font-regular p-3">{{ chain.timestamp }}</td>
+                            <td class="neueMontreal font-regular p-3">{{ chain.failureType }}</td>
+                            <td class="neueMontreal font-regular p-3">{{ chain.adUnit }}</td>
+                            <td class="neueMontreal font-regular p-3">{{ chain.pageUrl }}</td>
+                            <td class="neueMontreal font-regular p-3">{{ chain.revenue_impact }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
