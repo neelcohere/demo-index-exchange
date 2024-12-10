@@ -21,16 +21,17 @@ As Index Exchange, analyze these summaries to:
 Your response must strictly follow this format:
 
 High Priority:
-1. [First high priority recommendation]
-Description: [Detailed description of the recommendation and how to implement it]
-Impact: [Specific impact of implementing this recommendation]
-
-2. [Second high priority recommendation]
+1. [high priority recommendation]
 Description: [Detailed description of the recommendation and how to implement it]
 Impact: [Specific impact of implementing this recommendation]
 
 Medium Priority:
-1. [First medium priority recommendation]
+1. [medium priority recommendation]
+Description: [Detailed description of the recommendation and how to implement it]
+Impact: [Specific impact of implementing this recommendation]
+
+Low Priority:
+1. [low priority recommendation]
 Description: [Detailed description of the recommendation and how to implement it]
 Impact: [Specific impact of implementing this recommendation]
 
