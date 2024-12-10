@@ -157,13 +157,24 @@ window.sendAlert = async function() {
         return;
     }
 
-    try {
-        // Show loading state
-        const sendButton = modal.querySelector('button:last-child');
-        const originalText = sendButton.innerHTML;
-        sendButton.innerHTML = '<i class="ri-loader-4-line animate-spin mr-2"></i>Sending...';
-        sendButton.disabled = true;
+    // Get the send button - updated selector to be more specific
+    const sendButton = modal.querySelector('.btn[onclick="sendAlert()"]');
+    if (!sendButton) {
+        console.error('Send button not found');
+        return;
+    }
 
+    // Store original button content and disable button
+    const originalText = 'Send Email';  // Explicitly set the original text
+    sendButton.disabled = true;
+    sendButton.innerHTML = `
+        <div class="flex items-center justify-center gap-2">
+            <i class="ri-loader-4-line animate-spin"></i>
+            <span>Sending Email...</span>
+        </div>
+    `;
+
+    try {
         // Get the content div
         const contentDiv = modal.querySelector('.alert-content').cloneNode(true);
 
@@ -206,51 +217,62 @@ window.sendAlert = async function() {
             throw new Error('Failed to send email');
         }
 
-        // Show success message
+        // Reset button state before hiding modal
+        sendButton.innerHTML = originalText;
+        sendButton.disabled = false;
+
+        // Show success message and hide modal
         showToast('Alert email sent successfully');
         hideAlertModal();
 
     } catch (error) {
         console.error('Error sending alert:', error);
         showToast('Failed to send email. Please try again.');
-    } finally {
-        // Reset button state
-        if (sendButton) {
-            sendButton.innerHTML = originalText;
-            sendButton.disabled = false;
-        }
+        // Reset button state in case of error
+        sendButton.innerHTML = originalText;
+        sendButton.disabled = false;
     }
 }
 
 function formatRecommendations(recommendations) {
-    // Split by priority sections
-    const sections = recommendations.split('##').filter(Boolean);
+    // First, split into priority sections
+    const prioritySections = recommendations.split(/(?=High Priority:|Medium Priority:|Low Priority:)/).filter(Boolean);
     
-    return sections.map(section => {
-        const [priority, ...content] = section.trim().split(':');
-        const recommendations = content.join(':') // Rejoin in case there were colons in the content
-            .split(/(?=\d\.)/)  // Split on numbered points
-            .filter(Boolean)    // Remove empty strings
-            .map(rec => rec.trim());
+    return prioritySections.map(section => {
+        // Get the priority level and content
+        const priority = section.match(/^(High|Medium|Low) Priority:/)[0];
+        const content = section.replace(/^(High|Medium|Low) Priority:/, '').trim();
+        
+        // Split into individual recommendations
+        const recommendationItems = content
+            .split(/\d+\./)
+            .filter(Boolean)
+            .map(item => item.trim());
 
         return `
-            <div class="recommendation-section">
-                <h5 class="text-lg font-semibold mb-3 ${getPriorityColor(priority)}">
+            <div class="recommendation-section bg-white p-6 rounded-lg shadow-sm">
+                <h5 class="text-lg nueuMontreal font-medium mb-4 ${getPriorityColor(priority)}">
                     ${priority}
                 </h5>
-                <ul class="space-y-4">
-                    ${recommendations.map(rec => {
-                        const [number, ...text] = rec.split('.');
-                        const [recommendation, impact] = text.join('.').split('Impact:');
+                <ul class="space-y-6">
+                    ${recommendationItems.map(item => {
+                        const [recommendation, description, impact] = item
+                            .split(/Description:|Impact:/)
+                            .map(s => s.trim());
                         return `
-                            <li class="ml-4">
+                            <li>
                                 <div class="recommendation-content">
-                                    <p class="mb-2">${recommendation.trim()}</p>
-                                    ${impact ? `
-                                        <p class="text-sm text-gray-600 mt-1">
-                                            <span class="font-medium">Impact:</span> 
-                                            ${impact.trim()}
+                                    <p class="mb-3 text-gray-800 font-medium">${recommendation}</p>
+                                    ${description ? `
+                                        <p class="mb-3 text-gray-600 text-sm pl-4">
+                                            ${description}
                                         </p>
+                                    ` : ''}
+                                    ${impact ? `
+                                        <div class="flex items-start gap-2 text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                                            <span class="nueuMontreal font-medium">Impact:</span>
+                                            <span>${impact}</span>
+                                        </div>
                                     ` : ''}
                                 </div>
                             </li>
@@ -259,7 +281,7 @@ function formatRecommendations(recommendations) {
                 </ul>
             </div>
         `;
-    }).join('<div class="border-t my-4"></div>');  // Add separator between sections
+    }).join('<div class="my-6"></div>');
 }
 
 function getPriorityColor(priority) {
@@ -279,15 +301,41 @@ window.showAlertModal = async function() {
     // Show the modal
     modal.classList.remove('hidden');
 
-    // Gather all summaries from cache or log data
+    // FIRST: Immediately populate summaries in timeline
+    const summaryPlaceholders = modal.querySelectorAll('.summary-placeholder');
+    summaryPlaceholders.forEach(placeholder => {
+        const logId = placeholder.dataset.logId;
+        if (summaryCache[logId]) {
+            placeholder.textContent = summaryCache[logId];
+        } else {
+            const logCard = document.querySelector(`[data-log-id="${logId}"]`);
+            if (logCard) {
+                placeholder.textContent = logCard.getAttribute('data-log-summary');
+            }
+        }
+    });
+
+    // SECOND: Set up recommendations section with loading state
+    const recommendationsSection = modal.querySelector('#recommended-actions');
+    if (recommendationsSection) {
+        recommendationsSection.innerHTML = `
+            <div id="recommendations-loading" class="flex items-center justify-center p-8">
+                <div class="flex items-center gap-2 text-gray-600">
+                    <i class="ri-loader-4-line animate-spin text-2xl"></i>
+                    <span class="nueuMontreal">Generating recommendations...</span>
+                </div>
+            </div>
+            <div id="recommendations-content"></div>
+        `;
+    }
+
+    // Gather all summaries for the recommendation generation
     const logCards = document.querySelectorAll('.log-card');
     const summaries = {};
     
     for (const card of logCards) {
         const logId = card.getAttribute('data-log-id');
         const logTitle = card.querySelector('.font-bold').textContent;
-        
-        // Get summary from cache if available, otherwise use default summary
         summaries[logTitle] = summaryCache[logId] || card.getAttribute('data-log-summary');
     }
 
@@ -308,32 +356,34 @@ window.showAlertModal = async function() {
         const data = await response.json();
         console.log('Received recommendations:', data.recommendations);
         
-        // Update the recommendations section in the modal with formatted content
-        const recommendationsSection = modal.querySelector('#recommended-actions');
-        if (recommendationsSection) {
-            recommendationsSection.innerHTML = formatRecommendations(data.recommendations);
-        } else {
-            console.error('#recommended-actions element not found in modal');
+        // Hide loading spinner
+        const loadingDiv = modal.querySelector('#recommendations-loading');
+        if (loadingDiv) {
+            loadingDiv.classList.add('hidden');
+        }
+        
+        // Update the recommendations content
+        const contentDiv = modal.querySelector('#recommendations-content');
+        if (contentDiv) {
+            contentDiv.innerHTML = formatRecommendations(data.recommendations);
         }
 
     } catch (error) {
         console.error('Error generating recommendations:', error);
-    }
-
-    // Populate summaries in timeline
-    const summaryPlaceholders = modal.querySelectorAll('.summary-placeholder');
-    summaryPlaceholders.forEach(placeholder => {
-        const logId = placeholder.dataset.logId;
-        
-        if (summaryCache[logId]) {
-            placeholder.textContent = summaryCache[logId];
-        } else {
-            const logCard = document.querySelector(`[data-log-id="${logId}"]`);
-            if (logCard) {
-                placeholder.textContent = logCard.getAttribute('data-log-summary');
-            }
+        const loadingDiv = modal.querySelector('#recommendations-loading');
+        if (loadingDiv) {
+            loadingDiv.classList.add('hidden');
         }
-    });
+
+        const contentDiv = modal.querySelector('#recommendations-content');
+        if (contentDiv) {
+            contentDiv.innerHTML = `
+                <div class="p-4 bg-red-50 text-red-600 rounded-lg">
+                    Failed to generate recommendations. Please try again.
+                </div>
+            `;
+        }
+    }
 }
 
 function hideAlertModal() {
@@ -372,11 +422,6 @@ window.copyAlertToClipboard = function() {
             console.error('Failed to copy to clipboard:', error);
             showToast('Failed to copy to clipboard');
         });
-}
-
-function sendAlert() {
-    showToast('Alert email sent successfully');
-    hideAlertModal();
 }
 
 function showToast(message) {

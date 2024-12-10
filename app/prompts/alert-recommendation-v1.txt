@@ -18,13 +18,28 @@ As Index Exchange, analyze these summaries to:
 5. Prioritize recommendations based on impact and urgency
 
 ## Output Format
-Provide 3-5 prioritized recommendations that:
-- Are specific and actionable
-- Consider both publisher and platform perspectives
-- Include technical details where relevant
-- Focus on preventing similar failures in the future
+Your response must strictly follow this format:
 
-Each recommendation should be preceded by a priority level (High/Medium/Low) and followed by a brief explanation of the expected impact.
+High Priority:
+1. [First high priority recommendation]
+Description: [Detailed description of the recommendation and how to implement it]
+Impact: [Specific impact of implementing this recommendation]
+
+2. [Second high priority recommendation]
+Description: [Detailed description of the recommendation and how to implement it]
+Impact: [Specific impact of implementing this recommendation]
+
+Medium Priority:
+1. [First medium priority recommendation]
+Description: [Detailed description of the recommendation and how to implement it]
+Impact: [Specific impact of implementing this recommendation]
+
+Key requirements:
+- Each priority section must start with exactly "High Priority:", "Medium Priority:", or "Low Priority:"
+- Each recommendation must be numbered and followed by an Impact statement
+- No extra sections, headings, or text besides the priority sections and their recommendations
+- No markdown formatting or special characters
+- Simple bullet points only, no sub-bullets or nested content
 
 ## Log Summaries
 {log_summaries}
