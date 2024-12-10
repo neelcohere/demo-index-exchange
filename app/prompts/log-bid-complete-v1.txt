@@ -1,0 +1,14 @@
+## Input Format
+The input consists of JSON log entries capturing bid completion events, containing bid response details, pricing information, and latency metrics.
+
+## Task Description
+For the given bid completion entry, provide a brief summary focusing on:
+1. Final bid price and status
+2. Bid latency metrics
+3. Winning bid details if applicable
+
+## Output Format
+Format the response in 1-2 concise sentences highlighting the bid outcome, price, and any notable performance metrics.
+
+## Log Data
+{log_data}

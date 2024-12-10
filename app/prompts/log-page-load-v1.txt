@@ -1,0 +1,14 @@
+## Input Format
+The input (in Log Data) consists of JSON log entries capturing page load events from an advertising bidding system, containing timestamp, session details, publisher information, and user context.
+
+## Task Description
+For the given log entry from an advertising bidding system, provide a brief summary focusing on:
+1. When the page load occurred (timestamp in human-readable format)
+2. Key session and publisher identifiers
+3. User context details (device, browser, screen configuration, connection type)
+
+## Output Format
+Format the response in 2-3 concise sentences, highlighting any unusual or noteworthy characteristics about the user's setup or connection.
+
+## Log Data
+{log_data}

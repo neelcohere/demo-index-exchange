@@ -1,0 +1,14 @@
+## Input Format
+The input consists of JSON log entries capturing render failure events, containing error details, performance metrics, and failure context.
+
+## Task Description
+For the given render failure entry, provide a brief summary focusing on:
+1. Error type and code
+2. Performance context (page load time, network issues)
+3. Timing of failure relative to render start
+
+## Output Format
+Format the response in 2-3 concise sentences explaining the failure cause, context, and relevant performance metrics.
+
+## Log Data
+{log_data}

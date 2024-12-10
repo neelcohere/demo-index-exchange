@@ -1,0 +1,14 @@
+## Input Format
+The input consists of JSON log entries capturing bid start events, containing bid request details, ad unit information, and initial bid parameters.
+
+## Task Description
+For the given bid start entry, provide a brief summary focusing on:
+1. The ad unit details (size, position)
+2. Initial bid request identifiers
+3. Session context
+
+## Output Format
+Format the response in 1-2 concise sentences describing the bid request initiation and relevant ad unit details.
+
+## Log Data
+{log_data}

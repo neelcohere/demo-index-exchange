@@ -1,0 +1,14 @@
+## Input Format
+The input consists of JSON log entries capturing ad render start events, containing creative details and initial render metrics.
+
+## Task Description
+For the given render start entry, provide a brief summary focusing on:
+1. Creative ID and render initialization time
+2. Associated ad unit information
+3. Initial render metrics if available
+
+## Output Format
+Format the response in 1-2 concise sentences describing the render initialization and relevant creative details.
+
+## Log Data
+{log_data}
