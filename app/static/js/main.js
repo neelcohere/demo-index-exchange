@@ -217,6 +217,12 @@ window.sendAlert = async function() {
             throw new Error('Failed to send email');
         }
 
+        // Show the email sent tag
+        const emailSentTag = document.getElementById('email-sent-tag');
+        if (emailSentTag) {
+            emailSentTag.classList.remove('hidden');
+        }
+
         // Reset button state before hiding modal
         sendButton.innerHTML = originalText;
         sendButton.disabled = false;
@@ -365,8 +371,31 @@ window.showAlertModal = async function() {
         // Update the recommendations content
         const contentDiv = modal.querySelector('#recommendations-content');
         if (contentDiv) {
-            contentDiv.innerHTML = formatRecommendations(data.recommendations);
+            // Create container for recommendations and similar cases
+            contentDiv.innerHTML = `
+                <div class="space-y-8">
+                    ${formatRecommendations(data.recommendations)}
+                    ${data.links && data.links.length > 0 ? `
+                        <div class="mt-8 bg-gray-50 p-6 rounded-lg">
+                            <h4 class="text-lg nueuMontreal font-medium mb-4 text-gray-700">Similar Historical Cases</h4>
+                            <div class="space-y-3">
+                                ${data.links.map((id, index) => `
+                                    <div class="flex items-center gap-2 text-sm">
+                                        <i class="ri-history-line text-[#00291f]"></i>
+                                        <span class="nueuMontreal">Failure Chain:</span>
+                                        <span class="font-medium text-[#00291f]">${id}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <p class="mt-4 text-sm text-gray-600">
+                                These similar historical cases were analyzed to provide context-aware recommendations.
+                            </p>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
         }
+
 
     } catch (error) {
         console.error('Error generating recommendations:', error);

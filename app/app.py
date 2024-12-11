@@ -1,4 +1,5 @@
 import os
+import yaml
 from flask import Flask, render_template, jsonify, request
 from datetime import datetime
 import cohere
@@ -16,6 +17,8 @@ co = cohere.ClientV2(
 )
 PROMPT_DIR = os.path.join("app/prompts")
 MODEL = "command-r-plus-08-2024"
+RERANK = "rerank-v3.5"
+TOP_N = 3
 
 app = Flask(__name__, static_folder='static')
 
@@ -26,6 +29,38 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.getenv('EMAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('EMAIL_PASSWORD')
 mail = Mail(app)
+
+def convert_recommendations_to_yaml():
+    # Load the JSON data
+    with open('app/data/recommendation-log.json', 'r') as file:
+        data = json.load(file)
+    
+    yaml_documents = []
+    
+    for item in data:
+        # Create a dictionary with failure summary and recommendation first
+        formatted_item = {
+            'failureSummary': item['failureSummary'],
+            'recommendation': item['recommendation'],
+            'id': item['id'],
+            'timestamp': item['timestamp']
+        }
+        
+        # Convert the dictionary to YAML string
+        yaml_string = yaml.dump(
+            formatted_item,
+            default_flow_style=False,  # Use block style formatting
+            sort_keys=False,  # Maintain the order of keys
+            allow_unicode=True  # Support unicode characters
+        )
+        
+        yaml_documents.append(yaml_string)
+    
+    return yaml_documents, data
+
+
+YAML_DOCS, JSON_DOCS = convert_recommendations_to_yaml()
+
 
 @app.route('/api/generate-summary', methods=['POST'])
 def generate_summary():
@@ -92,13 +127,31 @@ def generate_recommendations():
             f"{log_type}:\n{summary}"
             for log_type, summary in summaries.items()
         ])
+        failure_summary = summaries.get("Render Failure", "")
+        assert failure_summary != ""
 
+        # retrieve top 3 documents
+        rank_res = co.rerank(
+            model=RERANK,
+            query=failure_summary,
+            documents=YAML_DOCS,
+            top_n=TOP_N,
+            return_documents=True
+        ).results
+
+        docs = "\n\n".join([doc.document.text for doc in rank_res[:1]])
+        doc_idx = [doc.index for doc in rank_res]
+        linked_fc = [JSON_DOCS[idx]['id'] for idx in doc_idx]
+        
         # Load and format the recommendation prompt
         with open(os.path.join(PROMPT_DIR, 'alert-recommendation-v1.txt'), 'r') as f:
             prompt = f.read()
 
         messages = [
-            {"role": "user", "content": prompt.format(log_summaries=formatted_summaries)}
+            {
+                "role": "user", 
+                "content": prompt.format(docs=docs, formatted_summaries=formatted_summaries)
+            }
         ]
 
         response = co.chat(
@@ -106,10 +159,14 @@ def generate_recommendations():
             messages=messages
         ).message.content[0].text
 
+        print(response)
+
         return jsonify({
             'success': True,
-            'recommendations': response
+            'recommendations': response,
+            "links": linked_fc,
         })
+    
     except Exception as e:
         print(f"Error generating recommendations: {str(e)}")
         return jsonify({
@@ -120,49 +177,49 @@ def generate_recommendations():
 
 @app.route('/api/send-alert', methods=['POST'])
 def send_alert():
-    # try:
-    data = request.json
-    html_content = data.get('html')
-    if not html_content:
-        return jsonify({"error": "No HTML content provided."}), 400
+    try:
+        data = request.json
+        html_content = data.get('html')
+        if not html_content:
+            return jsonify({"error": "No HTML content provided."}), 400
 
-    # create temp file for pdf
-    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
-        # generate pdf from html
-        HTML(string=html_content).write_pdf(tmp.name)
-        print(os.getenv("ALERT_EMAIL"))
-        # create and send email with PDF attachment
-        msg = Message(
-            subject="ALERT: Ad Render Failure Report",
-            sender=app.config['MAIL_USERNAME'],
-            recipients=[os.getenv("ALERT_EMAIL")]
-        )
-
-        msg.body = """
-Please find attached the Ad Render Failure Report. This report contains detailed information about a failure event.
-        """
-
-        with open(tmp.name, 'rb') as pdf_file:
-            msg.attach(
-                'ad_failure_report.pdf',
-                'application/pdf',
-                pdf_file.read()
+        # create temp file for pdf
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+            # generate pdf from html
+            HTML(string=html_content).write_pdf(tmp.name)
+            print(os.getenv("ALERT_EMAIL"))
+            # create and send email with PDF attachment
+            msg = Message(
+                subject="ALERT: Ad Render Failure Report",
+                sender=app.config['MAIL_USERNAME'],
+                recipients=[os.getenv("ALERT_EMAIL")]
             )
 
-        mail.send(msg)
+            msg.body = """
+    Please find attached the Ad Render Failure Report. This report contains detailed information about a failure event.
+            """
 
-    os.unlink(tmp.name)
-    return jsonify({
-        'success': True,
-        'message': 'Email sent successfully'
-    })
+            with open(tmp.name, 'rb') as pdf_file:
+                msg.attach(
+                    'ad_failure_report.pdf',
+                    'application/pdf',
+                    pdf_file.read()
+                )
+
+            mail.send(msg)
+
+        os.unlink(tmp.name)
+        return jsonify({
+            'success': True,
+            'message': 'Email sent successfully'
+        })
     
-    # except Exception as e:
-    #     print(f"Error sending email: {str(e)}")
-    #     return jsonify({
-    #         "success": False,
-    #         "error": "Failed to send email"
-    #     }), 500
+    except Exception as e:
+        print(f"Error sending email: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": "Failed to send email"
+        }), 500
 
 @app.template_filter('tojson')
 def tojson_filter(s):
@@ -172,7 +229,7 @@ def tojson_filter(s):
 # Sample data that was previously in React state
 FAILURE_CHAINS = [
     {   
-        "id": "FC-2024-001",
+        "id": "FC-2342-123",
         "timestamp": "2024-12-06T14:23:15.233Z",
         "failureType": "Render Failure",
         "adUnit": "Sidebar-300x250",
@@ -180,7 +237,7 @@ FAILURE_CHAINS = [
         "revenue_impact": "$2.45"
     },
     {
-        "id": "FC-2024-002",
+        "id": "FC-3542-323",
         "timestamp": "2024-12-06T15:45:22.156Z",
         "failureType": "Bid Timeout",
         "adUnit": "Header-728x90",
@@ -188,7 +245,7 @@ FAILURE_CHAINS = [
         "revenue_impact": "$3.12"
     },
     {
-        "id": "FC-2024-003",
+        "id": "FC-4234-554",
         "timestamp": "2024-12-06T16:12:08.789Z",
         "failureType": "Creative Load Error",
         "adUnit": "InContent-300x250",
